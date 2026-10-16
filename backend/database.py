@@ -8,25 +8,37 @@ MONGO_PASS = os.getenv("MONGO_PASS", "ai@resume@123")
 MONGO_HOST = os.getenv("MONGO_HOST", "cluster0.6soxja6.mongodb.net")
 DB_NAME = os.getenv("MONGO_DB_NAME", "ai_resume_analyzer")
 
-MONGO_URI = f"mongodb+srv://{quote_plus(MONGO_USER)}:{quote_plus(MONGO_PASS)}@{MONGO_HOST}/{DB_NAME}?appName=Cluster0"
+MONGO_URI = f"mongodb+srv://{quote_plus(MONGO_USER)}:{quote_plus(MONGO_PASS)}@{MONGO_HOST}/{DB_NAME}?retryWrites=true&w=majority"
 
-client = AsyncIOMotorClient(MONGO_URI)
-db = client[DB_NAME]
+client = None
+db = None
+users_col = None
+resumes_col = None
+counters_col = None
 
-users_col = db["users"]
-resumes_col = db["resumes"]
-counters_col = db["counters"]
+
+def _get_db():
+    global client, db, users_col, resumes_col, counters_col
+    if client is None:
+        client = AsyncIOMotorClient(MONGO_URI)
+        db = client[DB_NAME]
+        users_col = db["users"]
+        resumes_col = db["resumes"]
+        counters_col = db["counters"]
+    return db, users_col, resumes_col, counters_col
 
 
 async def init_db():
-    await users_col.create_index("username", unique=True)
-    await resumes_col.create_index("username")
-    await resumes_col.create_index([("date", -1)])
-    await resumes_col.create_index("id", unique=True)
+    _, ucol, rcol, _ = _get_db()
+    await ucol.create_index("username", unique=True)
+    await rcol.create_index("username")
+    await rcol.create_index([("date", -1)])
+    await rcol.create_index("id", unique=True)
 
 
 async def _next_id(collection_name):
-    counter = await counters_col.find_one_and_update(
+    _, _, _, ccol = _get_db()
+    counter = await ccol.find_one_and_update(
         {"_id": collection_name},
         {"$inc": {"seq": 1}},
         upsert=True,
@@ -36,6 +48,7 @@ async def _next_id(collection_name):
 
 
 async def save_resume(username, filename, ats_score, rating, predicted_role, skills, suggestions):
+    _, _, rcol, _ = _get_db()
     doc = {
         "id": await _next_id("resumes"),
         "username": username,
@@ -47,11 +60,12 @@ async def save_resume(username, filename, ats_score, rating, predicted_role, ski
         "suggestions": suggestions,
         "date": datetime.now(timezone.utc),
     }
-    await resumes_col.insert_one(doc)
+    await rcol.insert_one(doc)
 
 
 async def get_user_resumes(username, limit=50):
-    cursor = resumes_col.find(
+    _, _, rcol, _ = _get_db()
+    cursor = rcol.find(
         {"username": username},
         {"_id": 0},
     ).sort("date", -1).limit(limit)
@@ -63,7 +77,8 @@ async def get_user_resumes(username, limit=50):
 
 
 async def get_all_resumes(limit=20):
-    cursor = resumes_col.find(
+    _, _, rcol, _ = _get_db()
+    cursor = rcol.find(
         {},
         {"_id": 0},
     ).sort("date", -1).limit(limit)
@@ -75,7 +90,8 @@ async def get_all_resumes(limit=20):
 
 
 async def get_resume_by_id(rid):
-    doc = await resumes_col.find_one({"id": rid}, {"_id": 0})
+    _, _, rcol, _ = _get_db()
+    doc = await rcol.find_one({"id": rid}, {"_id": 0})
     if doc:
         doc["date"] = doc["date"].isoformat()
     return doc

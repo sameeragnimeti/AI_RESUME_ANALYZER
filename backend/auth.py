@@ -1,8 +1,9 @@
 import bcrypt
-from backend.database import users_col
+from backend.database import _get_db
 
 
 async def register(fullname, email, username, password):
+    _, users_col, _, _ = _get_db()
     try:
         hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
         doc = {
@@ -21,6 +22,7 @@ async def register(fullname, email, username, password):
 
 
 async def login(username, password):
+    _, users_col, _, _ = _get_db()
     row = await users_col.find_one({"username": username.strip()})
     if row is None:
         return None, "Invalid username or password."

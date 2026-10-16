@@ -1,16 +1,12 @@
-# Backend
 fastapi>=0.115.0
-uvicorn>=0.30.0
 python-multipart>=0.0.12
 pdfplumber>=0.10.0
-PyPDF2>=0.3.0
+PyPDF2>=3.0.0
 scikit-learn>=1.3.0
 bcrypt>=4.0.0
 fpdf2>=2.7.0
 motor>=3.5.0
 
-# Frontend (via package.json)
-# React + TypeScript + Vite + Tailwind CSS
 #uvicorn backend.server:app --reload --port 8000
-#cd frontend
+# cd frontend 
 #npm run dev

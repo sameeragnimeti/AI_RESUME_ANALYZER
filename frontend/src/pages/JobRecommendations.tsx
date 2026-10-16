@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import {
   Loader2, AlertCircle, Briefcase, TrendingUp, ExternalLink,
-  CheckCircle2, XCircle, ChevronDown, ChevronUp, Rocket, Map,
+  CheckCircle2, ChevronDown, ChevronUp, Rocket, Map,
 } from 'lucide-react'
 import { jobRecommendationApi, JobRecommendation, CareerPathItem } from '../api/client'
 import FileUpload from '../components/FileUpload'

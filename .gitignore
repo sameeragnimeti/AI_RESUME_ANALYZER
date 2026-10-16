@@ -1,10 +1,12 @@
+.env
+.env.*
+!.env.example
 .venv/
+venv/
 __pycache__/
 *.pyc
-*.pyo
-database/*.db
-uploads/*
-reports/*
-.env
+node_modules/
 frontend/node_modules/
 frontend/dist/
+uploads/
+reports/
