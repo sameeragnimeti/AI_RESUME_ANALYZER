@@ -13,7 +13,7 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "api/index.py"
+      "dest": "https://ai-resume-analyzer-yzx1.onrender.com/api/$1"
     },
     {
       "src": "/(.*)",
